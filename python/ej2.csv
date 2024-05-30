@@ -1,0 +1,6 @@
+Name;KEY;PARENT_KEY;TYPE;Indice
+FolderA;A;;Package;1
+caseAb;bf;A;Package;
+caseAbc;cd;bf;UseCase;
+caseAc;cl;A;Package;
+caseAcg;hi;cl;UseCase;
