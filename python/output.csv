@@ -1,0 +1,6 @@
+FolderA [Package];1
+caseAb [Package];1.1
+caseAbc [UseCase];1.1.1
+caseAc [Package];1.2
+caseAcg [UseCase];1.2.1
+caseAcd [UseCase];1.2.2

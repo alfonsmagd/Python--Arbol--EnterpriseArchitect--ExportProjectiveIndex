@@ -1,86 +1,33 @@
 import csv
 from collections import defaultdict
-
+# Estructura para almacenar los nodos del árbol
 class Node:
-    def __init__(self, name, key, type):
+    def __init__(self, name, type, key):
         self.name = name
-        self.key = key
         self.type = type
-        self.children = []
-    def add_child(self, child_node):
-        self.children.append(child_node)
-    def __repr__(self, level=0):
-        ret = "\t" * level + repr(self.name) + " [" + self.type + "]" + "\n"
-        for child in self.children:
-            ret += child.__repr__(level + 1)
-        return ret
-def build_tree_from_csv(file_path):
-    nodes = {}
-    root = None
-    # Leer el archivo CSV
-    with open(file_path, newline='') as csvfile:
-        reader = csv.DictReader(csvfile ,  delimiter=';')
+        self.key = key
+        
+# Lee los datos del CSV
+def read_data():
+    data = defaultdict(list)
+    with open('ej2.csv', 'r') as f:
+        reader = csv.DictReader(f, delimiter=';')
         for row in reader:
-            name = row['Name']
-            key = row['KEY']
-            type = row['TYPE']
-            parent_key = row['PARENT_KEY']
-            node = Node(name, key, type)
-            nodes[key] = node
-            if parent_key == '':
-                root = node
-            else:
-                if parent_key in nodes:
-                    nodes[parent_key].add_child(node)
-                else:
-                    # Si el padre no existe aún, inicializamos una lista para sus hijos
-                    nodes[parent_key] = Node(None, parent_key, None)
-                    nodes[parent_key].add_child(node)
-    # Asegurar que todos los nodos huérfanos son asignados a sus padres correspondientes
-    for key, node in nodes.items():
-        if node.name is None:  # Nodo huérfano encontrado
-            for child in node.children:
-                if child.key in nodes:
-                    nodes[child.key] = child
-    return root
-
-def generate_paths_from_root_to_leaves(node, path=None, index=''):
-    if path is None:
-        path = []
-        index = '1'
-    path.append(f"{node.name} [{node.type}] {index}")
-    if not node.children:  # Es una hoja
-        yield path.copy()
-    else:
-        for i, child in enumerate(node.children, start=1):
-            child_index = f"{index}.{i}"
-            yield from generate_paths_from_root_to_leaves(child, path, child_index)
-    path.pop()  # Retroceder
-
-
-def write_paths_to_csv(paths, output_file):
-    with open(output_file, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(['Path'])  # Encabezado del CSV
-        written = set()  # Conjunto de elementos ya escritos
-        for path in paths:
-            for element in path:
-                if element not in written:
-                    writer.writerow([element])
-                    written.add(element)
-
-# Ejemplo de uso
-if __name__ == "__main__":
-    # Construir el árbol desde el archivo CSV
-    root = build_tree_from_csv('ej2.csv')
-    
-    # Mostrar el árbol
-    print(root)
-    
-    # Generar las cadenas desde la raíz hasta cada nodo hoja
-    paths = list(generate_paths_from_root_to_leaves(root))
-    
-    # Escribir las cadenas en un nuevo archivo CSV
-    write_paths_to_csv(paths, 'out.csv')
-    
-    print("Paths from root to leaves have been written to 'output_paths.csv'")
+            node = Node(row['Name'], row['TYPE'], row['KEY'])
+            data[row['PARENT_KEY']].append(node)
+            print(f"Agregando nodo: {node.name} a la lista de hijos de {row['PARENT_KEY']}")
+            
+    return data
+# Construye el árbol a partir de los datos y escribe la salida en un CSV
+def build_tree(data, key='', indice='', writer=None):
+    if key in data:
+        for i, node in enumerate(data[key], start=1):
+            node.indice = f'{indice}{i}' if indice else str(i)
+            print(f'{node.name} [{node.type}] {node.indice}')
+            writer.writerow([f'{node.name} [{node.type}]', node.indice])
+            build_tree(data, node.key, f'{node.indice}.', writer)
+# Ejecuta el script
+data = read_data()
+with open('output.csv', 'w', newline='') as f:
+    writer = csv.writer(f, delimiter=';')
+    build_tree(data, writer=writer)
